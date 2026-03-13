@@ -246,27 +246,24 @@ const GAME_WIDTH = 400;
 const GAME_HEIGHT = 600;
 const WALL_THICKNESS = 60;
 const DEADLINE_Y = 100;
-// プレビュー用にWeb上のフリー素材URLを仮セットしています。
-// ※ローカルで開く場合は、ここを "桜イラスト.png" のようにファイル名に戻してください。
+// 画像を差し替えるときは images/ フォルダ内のファイルを入れ替えてください
 const FRUIT_TYPES = [
-    { name: "★", radius: 15, color: "#ff7f7f", score: 2, image: "https://upload.wikimedia.org/wikipedia/commons/thumb/c/c9/Cherry_blossom_icon.svg/512px-Cherry_blossom_icon.svg.png" },
-    { name: "あ", radius: 25, color: "#ffbf7f", score: 4, image: "https://upload.wikimedia.org/wikipedia/commons/thumb/9/91/Money_Bag_Icon.svg/512px-Money_Bag_Icon.svg.png" },
-    { name: "ﾊﾟｳﾊﾟﾄ", radius: 35, color: "#ffff7f", score: 8, image: "https://upload.wikimedia.org/wikipedia/commons/thumb/1/1a/Elephant_Icon.svg/512px-Elephant_Icon.svg.png" },
-    { name: "ﾎﾟｹﾓﾝ", radius: 45, color: "#7fff7f", score: 16 },
-    { name: "ｳﾙﾄﾗﾏﾝ", radius: 55, color: "#7fffff", score: 32 },
-    { name: "うさぎ", radius: 65, color: "#7f7fff", score: 64 },
-    { name: "次女", radius: 75, color: "#ff7fff", score: 128 },
-    { name: "長男", radius: 85, color: "#ff7fbf", score: 256 },
-    { name: "長女", radius: 100, color: "#e0e0e0", score: 512 },
-    { name: "おとうさん", radius: 120, color: "#ff4500", score: 1024 },
-    { name: "おかあさん", radius: 140, color: "#ffd700", score: 2048 }
+    { name: "★",        radius: 15,  color: "#ff7f7f", score: 2,    image: "images/01_hoshi.svg" },
+    { name: "あ",        radius: 25,  color: "#ffbf7f", score: 4,    image: "images/02_a.svg" },
+    { name: "ﾊﾟｳﾊﾟﾄ",    radius: 35,  color: "#ffff7f", score: 8,    image: "images/03_paupato.svg" },
+    { name: "ﾎﾟｹﾓﾝ",    radius: 45,  color: "#7fff7f", score: 16,   image: "images/04_pokemon.svg" },
+    { name: "ｳﾙﾄﾗﾏﾝ",   radius: 55,  color: "#7fffff", score: 32,   image: "images/05_ultraman.svg" },
+    { name: "うさぎ",     radius: 65,  color: "#7f7fff", score: 64,   image: "images/06_usagi.svg" },
+    { name: "次女",       radius: 75,  color: "#ff7fff", score: 128,  image: "images/07_jijo.svg" },
+    { name: "長男",       radius: 85,  color: "#ff7fbf", score: 256,  image: "images/08_chonan.svg" },
+    { name: "長女",       radius: 100, color: "#e0e0e0", score: 512,  image: "images/09_chojo.svg" },
+    { name: "おとうさん",  radius: 120, color: "#ff4500", score: 1024, image: "images/10_otousan.svg" },
+    { name: "おかあさん",  radius: 140, color: "#ffd700", score: 2048, image: "images/11_okaasan.svg" }
 ];
-// --- 画像の事前読み込み (CORS対応) ---
 const loadedImages = {};
 FRUIT_TYPES.forEach(t => {
     if (t.image) {
         const img = new Image();
-        img.crossOrigin = "Anonymous"; // 外部URLの画像をCanvasに描画するために必須
         img.src = t.image;
         loadedImages[t.name] = img;
     }
