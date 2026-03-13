@@ -61,7 +61,18 @@
             line-height: 1.1;
             transform: rotate(-2deg);
         }
-        .logo-icon { position: absolute; top: -15px; right: -25px; font-size: 45px; filter: drop-shadow(4px 4px 0px #d35400); transform: rotate(15deg); }
+        .logo-icon {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 200px;
+            height: 200px;
+            opacity: 0.3;
+            z-index: -1;
+            pointer-events: none;
+        }
+        .logo-icon img { width: 100%; height: 100%; object-fit: contain; }
         .btn-group { display: flex; flex-direction: column; gap: 15px; width: 220px; }
         .btn {
             background: var(--suika-yellow);
@@ -177,7 +188,7 @@
     <div id="screen-title" class="screen active">
         <div class="title-logo-wrapper">
             <div class="title-logo">おかあさん<br>ゲーム</div>
-            <div class="logo-icon">👩</div>
+            <div class="logo-icon"><img src="images/11_okaasan.png" alt="おかあさん"></div>
         </div>
         <div class="btn-group">
             <button class="btn" onclick="startGame()">ゲームスタート</button>
@@ -248,17 +259,17 @@ const WALL_THICKNESS = 60;
 const DEADLINE_Y = 100;
 // 画像を差し替えるときは images/ フォルダ内のファイルを入れ替えてください
 const FRUIT_TYPES = [
-    { name: "★",        radius: 15,  color: "#ff7f7f", score: 2,    image: "images/01_hoshi.svg" },
-    { name: "あ",        radius: 25,  color: "#ffbf7f", score: 4,    image: "images/02_a.svg" },
-    { name: "ﾊﾟｳﾊﾟﾄ",    radius: 35,  color: "#ffff7f", score: 8,    image: "images/03_paupato.svg" },
-    { name: "ﾎﾟｹﾓﾝ",    radius: 45,  color: "#7fff7f", score: 16,   image: "images/04_pokemon.svg" },
-    { name: "ｳﾙﾄﾗﾏﾝ",   radius: 55,  color: "#7fffff", score: 32,   image: "images/05_ultraman.svg" },
-    { name: "うさぎ",     radius: 65,  color: "#7f7fff", score: 64,   image: "images/06_usagi.svg" },
-    { name: "次女",       radius: 75,  color: "#ff7fff", score: 128,  image: "images/07_jijo.svg" },
-    { name: "長男",       radius: 85,  color: "#ff7fbf", score: 256,  image: "images/08_chonan.svg" },
-    { name: "長女",       radius: 100, color: "#e0e0e0", score: 512,  image: "images/09_chojo.svg" },
-    { name: "おとうさん",  radius: 120, color: "#ff4500", score: 1024, image: "images/10_otousan.svg" },
-    { name: "おかあさん",  radius: 140, color: "#ffd700", score: 2048, image: "images/11_okaasan.svg" }
+    { name: "★",        radius: 15,  color: "#ff7f7f", score: 2,    image: "images/01_hoshi.png" },
+    { name: "あ",        radius: 25,  color: "#ffbf7f", score: 4,    image: "images/02_a.png" },
+    { name: "ﾊﾟｳﾊﾟﾄ",    radius: 35,  color: "#ffff7f", score: 8,    image: "images/03_paupato.png" },
+    { name: "ﾎﾟｹﾓﾝ",    radius: 45,  color: "#7fff7f", score: 16,   image: "images/04_pokemon.png" },
+    { name: "ｳﾙﾄﾗﾏﾝ",   radius: 55,  color: "#7fffff", score: 32,   image: "images/05_ultraman.png" },
+    { name: "うさぎ",     radius: 65,  color: "#7f7fff", score: 64,   image: "images/06_usagi.PNG" },
+    { name: "次女",       radius: 75,  color: "#ff7fff", score: 128,  image: "images/07_jijo.PNG" },
+    { name: "長男",       radius: 85,  color: "#ff7fbf", score: 256,  image: "images/08_chonan.PNG" },
+    { name: "長女",       radius: 100, color: "#e0e0e0", score: 512,  image: "images/09_chojo.PNG" },
+    { name: "おとうさん",  radius: 120, color: "#ff4500", score: 1024, image: "images/10_otousan.png" },
+    { name: "おかあさん",  radius: 140, color: "#ffd700", score: 2048, image: "images/11_okaasan.png" }
 ];
 const loadedImages = {};
 FRUIT_TYPES.forEach(t => {
@@ -444,7 +455,7 @@ function initEngine() {
     render = Render.create({
         element: document.getElementById('game-container'),
         engine: engine,
-        options: { width: GAME_WIDTH, height: GAME_HEIGHT, wireframes: false, background: '#ffffff' }
+        options: { width: GAME_WIDTH, height: GAME_HEIGHT, wireframes: false, background: '#fef6e0' }
     });
     runner = Runner.create();
     Render.run(render);
@@ -464,9 +475,12 @@ function initEngine() {
                     const type = FRUIT_TYPES[nextLvl];
                     const mid = { x: (a.position.x + b.position.x) / 2, y: (a.position.y + b.position.y) / 2 };
                     Composite.remove(engine.world, [a, b]);
+                    const hasImg = type.image && loadedImages[type.name];
                     const newFruit = Bodies.circle(mid.x, mid.y, type.radius, {
                         label: 'fruit_' + nextLvl,
-                        render: { fillStyle: type.color, strokeStyle: '#d35400', lineWidth: 3 },
+                        render: hasImg
+                            ? { fillStyle: 'transparent', strokeStyle: 'transparent', lineWidth: 0 }
+                            : { fillStyle: type.color, strokeStyle: '#d35400', lineWidth: 3 },
                         restitution: 0.2
                     });
                     Composite.add(engine.world, newFruit);
@@ -524,16 +538,8 @@ function initEngine() {
                         ctx.arc(0, 0, t.radius, 0, 2 * Math.PI);
                         ctx.clip();
 
-                        // 画像を描画
                         const size = t.radius * 2;
                         ctx.drawImage(img, -size/2, -size/2, size, size);
-
-                        // 切り抜いたフチに枠線を描画
-                        ctx.beginPath();
-                        ctx.arc(0, 0, t.radius, 0, 2 * Math.PI);
-                        ctx.lineWidth = 3;
-                        ctx.strokeStyle = '#d35400';
-                        ctx.stroke();
 
                         ctx.restore();
                     } else {
@@ -624,10 +630,13 @@ function prepareNext() {
 function spawn() {
     if (isGameOver || !isPlaying || isPaused) return;
     const t = FRUIT_TYPES[nextTypeIndex];
+    const hasImage = t.image && loadedImages[t.name];
     currentFruit = Bodies.circle(GAME_WIDTH / 2, 40, t.radius, {
         isStatic: true,
         label: 'fruit_' + nextTypeIndex,
-        render: { fillStyle: t.color, strokeStyle: '#d35400', lineWidth: 3 }
+        render: hasImage
+            ? { fillStyle: 'transparent', strokeStyle: 'transparent', lineWidth: 0 }
+            : { fillStyle: t.color, strokeStyle: '#d35400', lineWidth: 3 }
     });
     Composite.add(engine.world, currentFruit);
     prepareNext();
