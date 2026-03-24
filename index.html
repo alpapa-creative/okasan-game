@@ -10,7 +10,7 @@
         const RANKING_API = "https://script.google.com/macros/s/AKfycbydYxr1uwaA0SUD8IgglZiDdoZOJlwMwGtqi7Q_DrimXQcb5IBmCyUAk-6Jv9aDrGz6/exec";
     </script>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@700;900&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@700;800;900&display=swap');
         :root {
             --bg-color: #fceabb;
             --panel-color: #f8d800;
@@ -18,6 +18,7 @@
             --accent-color: #ff9800;
             --suika-yellow: #ffcc33;
             --suika-orange: #e67e22;
+            --title-stroke: #3d2914;
         }
         body {
             margin: 0;
@@ -51,25 +52,68 @@
             background-color: rgba(252, 234, 187, 0.95);
         }
         .screen.active { display: flex; }
-        .title-logo-wrapper { position: relative; margin-bottom: 30px; }
+        @keyframes title-pop-float {
+            0%, 100% { transform: rotate(-2deg) translateY(0) scale(1); }
+            50% { transform: rotate(-2deg) translateY(-5px) scale(1.02); }
+        }
+        .title-logo-wrapper {
+            position: relative;
+            margin-bottom: 30px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
         .title-logo {
-            font-size: clamp(40px, 12vw, 56px);
-            font-weight: 900;
-            color: var(--suika-yellow);
-            text-shadow: 3px 3px 0 #d35400, -3px -3px 0 #d35400, 3px -3px 0 #d35400, -3px 3px 0 #d35400, 0px 6px 0 #d35400, 0px 8px 15px rgba(0,0,0,0.2);
             text-align: center;
-            line-height: 1.1;
+            line-height: 0.98;
             transform: rotate(-2deg);
+            animation: title-pop-float 2.8s ease-in-out infinite;
+        }
+        .title-logo .title-line {
+            display: inline-block;
+            font-size: clamp(42px, 11.5vw, 58px);
+            font-weight: 900;
+            letter-spacing: -0.06em;
+            padding: 0 1px;
+            -webkit-text-stroke: 3px var(--title-stroke);
+            paint-order: stroke fill;
+            background: linear-gradient(
+                168deg,
+                #fff9e6 0%,
+                #ffe082 22%,
+                #ffcc33 45%,
+                #ff9800 78%,
+                #ffb74d 100%
+            );
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            filter: drop-shadow(0 4px 0 rgba(61, 41, 20, 0.35));
+        }
+        .title-logo .title-line--accent {
+            margin-top: 0;
+            font-size: clamp(36px, 10vw, 50px);
+            letter-spacing: -0.04em;
+            -webkit-text-stroke: 3px var(--title-stroke);
+            paint-order: stroke fill;
+            background: linear-gradient(
+                168deg,
+                #fff8f3 0%,
+                #fce4ec 18%,
+                #f8bbd9 40%,
+                #ff8a65 68%,
+                #ff7043 100%
+            );
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            filter: drop-shadow(0 4px 0 rgba(61, 41, 20, 0.35));
         }
         .logo-icon {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            width: 200px;
-            height: 200px;
-            opacity: 0.3;
-            z-index: -1;
+            width: min(160px, 42vw);
+            height: min(160px, 42vw);
+            margin-bottom: -28px;
+            opacity: 1;
             pointer-events: none;
         }
         .logo-icon img { width: 100%; height: 100%; object-fit: contain; }
@@ -182,8 +226,8 @@
 <body>
     <div id="screen-title" class="screen active">
         <div class="title-logo-wrapper">
-            <div class="title-logo">おかあさん<br>ゲーム</div>
             <div class="logo-icon"><img src="images/11_okasan.png" alt="おかあさん"></div>
+            <div class="title-logo"><span class="title-line">おかあさん</span><br><span class="title-line title-line--accent">ゲーム</span></div>
         </div>
         <div class="btn-group">
             <button class="btn" onclick="startGame()">ゲームスタート</button>
