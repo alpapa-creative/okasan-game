@@ -144,17 +144,12 @@
         }
         .circle-btn:active { transform: translateY(2px); box-shadow: 0 2px 0 var(--panel-color); }
         #next-container {
-            position: absolute;
-            right: 15px;
-            top: 125px;
-            background: white;
-            padding: 10px;
+            background: rgba(255, 255, 255, 0.95);
+            padding: 5px 10px;
             border-radius: 20px;
-            border: 4px solid var(--suika-yellow);
+            border: 3px solid #d35400;
             text-align: center;
-            display: none;
-            z-index: 5;
-            box-shadow: 0 4px 0 rgba(0,0,0,0.1);
+            box-shadow: 0 4px 0px var(--panel-color);
             pointer-events: none;
         }
         #next-preview { width: 45px; height: 45px; display: flex; justify-content: center; align-items: center; margin-top: 5px; overflow: hidden; border-radius: 50%; }
@@ -226,22 +221,18 @@
         </div>
     </div>
     <div id="ui-layer" style="display:none;">
+        <div id="next-container">
+            <div class="score-label">つぎ</div>
+            <div id="next-preview"></div>
+        </div>
         <div class="score-box">
             <div class="score-label">スコア</div>
             <div id="current-score" class="score-value">0</div>
-        </div>
-        <div class="score-box">
-            <div class="score-label">ハイスコア</div>
-            <div id="high-score" class="score-value">0</div>
         </div>
         <div class="control-btns">
             <button id="pause-btn" class="circle-btn" onclick="pauseGame()">⏸</button>
             <button id="mute-btn" class="circle-btn" onclick="toggleMute()">🔊</button>
         </div>
-    </div>
-    <div id="next-container">
-        <div class="score-label">つぎ</div>
-        <div id="next-preview"></div>
     </div>
     <div id="game-container"></div>
     <div id="game-over">
@@ -377,6 +368,35 @@ let isGameOver = false;
 let canDrop = false;
 let isPlaying = false;
 let isPaused = false;
+let dropGuideX = GAME_WIDTH / 2;
+const particles = [];
+const scorePopups = [];
+
+function spawnParticles(x, y, color, count) {
+    for (let i = 0; i < count; i++) {
+        const angle = (Math.PI * 2 / count) * i + Math.random() * 0.5;
+        const speed = 2 + Math.random() * 4;
+        particles.push({
+            x, y,
+            vx: Math.cos(angle) * speed,
+            vy: Math.sin(angle) * speed,
+            radius: 2 + Math.random() * 3,
+            color: color,
+            alpha: 1,
+            life: 30 + Math.random() * 20
+        });
+    }
+}
+
+function spawnScorePopup(x, y, value) {
+    scorePopups.push({
+        x, y,
+        text: "+" + value,
+        alpha: 1,
+        life: 45,
+        vy: -1.5
+    });
+}
 window.showScreen = function(screenId) {
     initAudioContext();
     document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
@@ -487,6 +507,8 @@ function initEngine() {
                     Composite.add(engine.world, newFruit);
 
                     playMergeSound(nextLvl);
+                    spawnParticles(mid.x, mid.y, type.color, 8 + nextLvl * 2);
+                    spawnScorePopup(mid.x, mid.y, type.score);
                     score += type.score;
                     updateScoreUI();
                 }
@@ -510,6 +532,22 @@ function initEngine() {
     Events.on(render, 'afterRender', () => {
         if (!isPlaying) return;
         const ctx = render.context;
+
+        // ドロップ位置の縦ガイドライン
+        if (canDrop && currentFruit) {
+            ctx.save();
+            ctx.setLineDash([4, 8]);
+            ctx.beginPath();
+            ctx.moveTo(dropGuideX, 60);
+            ctx.lineTo(dropGuideX, GAME_HEIGHT);
+            ctx.strokeStyle = "rgba(211, 84, 0, 0.2)";
+            ctx.lineWidth = 2;
+            ctx.stroke();
+            ctx.setLineDash([]);
+            ctx.restore();
+        }
+
+        // デッドライン
         ctx.setLineDash([6, 6]);
         ctx.beginPath();
         ctx.moveTo(0, DEADLINE_Y);
@@ -518,6 +556,45 @@ function initEngine() {
         ctx.lineWidth = 3;
         ctx.stroke();
         ctx.setLineDash([]);
+
+        // パーティクル描画・更新
+        for (let i = particles.length - 1; i >= 0; i--) {
+            const p = particles[i];
+            p.x += p.vx;
+            p.y += p.vy;
+            p.vy += 0.1;
+            p.life--;
+            p.alpha = Math.max(0, p.life / 50);
+            ctx.save();
+            ctx.globalAlpha = p.alpha;
+            ctx.beginPath();
+            ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
+            ctx.fillStyle = p.color;
+            ctx.fill();
+            ctx.restore();
+            if (p.life <= 0) particles.splice(i, 1);
+        }
+
+        // スコアポップアップ描画・更新
+        for (let i = scorePopups.length - 1; i >= 0; i--) {
+            const s = scorePopups[i];
+            s.y += s.vy;
+            s.life--;
+            s.alpha = Math.max(0, s.life / 30);
+            ctx.save();
+            ctx.globalAlpha = s.alpha;
+            ctx.font = "bold 20px 'M PLUS Rounded 1c'";
+            ctx.textAlign = "center";
+            ctx.textBaseline = "middle";
+            ctx.fillStyle = "#d35400";
+            ctx.strokeStyle = "white";
+            ctx.lineWidth = 3;
+            ctx.strokeText(s.text, s.x, s.y);
+            ctx.fillText(s.text, s.x, s.y);
+            ctx.restore();
+            if (s.life <= 0) scorePopups.splice(i, 1);
+        }
+
         ctx.font = "bold 14px 'M PLUS Rounded 1c'";
         ctx.textAlign = "center";
         ctx.textBaseline = "middle";
@@ -568,8 +645,6 @@ window.startGame = function() {
     initAudioContext();
     showScreen('none');
     document.getElementById('ui-layer').style.display = 'flex';
-    document.getElementById('next-container').style.display = 'block';
-    document.getElementById('high-score').innerText = highScore;
 
     if (isGameOver || !isPlaying) {
         score = 0;
@@ -610,7 +685,6 @@ window.resetToTitle = function() {
     bgmStep = 0;
 
     document.getElementById('ui-layer').style.display = 'none';
-    document.getElementById('next-container').style.display = 'none';
     document.getElementById('game-over').style.display = 'none';
     showScreen('title');
 };
@@ -659,6 +733,7 @@ function movePreview(clientX) {
     let x = getPhysicsX(clientX);
     const r = FRUIT_TYPES[parseInt(currentFruit.label.split('_')[1])].radius;
     x = Math.max(r, Math.min(x, GAME_WIDTH - r));
+    dropGuideX = x;
     Body.setPosition(currentFruit, { x: x, y: 40 });
 }
 function updateScoreUI() {
@@ -667,8 +742,6 @@ function updateScoreUI() {
     if (score > highScore) {
         highScore = score;
         localStorage.setItem('childArtGameHighScore', highScore);
-        const hi = document.getElementById('high-score');
-        if (hi) hi.innerText = highScore;
     }
 }
 window.onload = initEngine;
