@@ -188,7 +188,7 @@
     <div id="screen-title" class="screen active">
         <div class="title-logo-wrapper">
             <div class="title-logo">おかあさん<br>ゲーム</div>
-            <div class="logo-icon"><img src="images/11_okaasan.png" alt="おかあさん"></div>
+            <div class="logo-icon"><img src="images/11_okasan.png" alt="おかあさん"></div>
         </div>
         <div class="btn-group">
             <button class="btn" onclick="startGame()">ゲームスタート</button>
@@ -259,17 +259,17 @@ const WALL_THICKNESS = 60;
 const DEADLINE_Y = 100;
 // 画像を差し替えるときは images/ フォルダ内のファイルを入れ替えてください
 const FRUIT_TYPES = [
-    { name: "★",        radius: 15,  color: "#ff7f7f", score: 2,    image: "images/01_hoshi.png" },
-    { name: "あ",        radius: 25,  color: "#ffbf7f", score: 4,    image: "images/02_a.png" },
-    { name: "ﾊﾟｳﾊﾟﾄ",    radius: 35,  color: "#ffff7f", score: 8,    image: "images/03_paupato.png" },
-    { name: "ﾎﾟｹﾓﾝ",    radius: 45,  color: "#7fff7f", score: 16,   image: "images/04_pokemon.png" },
-    { name: "ｳﾙﾄﾗﾏﾝ",   radius: 55,  color: "#7fffff", score: 32,   image: "images/05_ultraman.png" },
-    { name: "うさぎ",     radius: 65,  color: "#7f7fff", score: 64,   image: "images/06_usagi.PNG" },
-    { name: "次女",       radius: 75,  color: "#ff7fff", score: 128,  image: "images/07_jijo.PNG" },
-    { name: "長男",       radius: 85,  color: "#ff7fbf", score: 256,  image: "images/08_chonan.PNG" },
-    { name: "長女",       radius: 100, color: "#e0e0e0", score: 512,  image: "images/09_chojo.PNG" },
-    { name: "おとうさん",  radius: 120, color: "#ff4500", score: 1024, image: "images/10_otousan.png" },
-    { name: "おかあさん",  radius: 140, color: "#ffd700", score: 2048, image: "images/11_okaasan.png" }
+    { name: "ハート",       radius: 15,  color: "#ff7f7f", score: 2,    image: "images/01_heart.png" },
+    { name: "アンパンマン",  radius: 25,  color: "#ffbf7f", score: 4,    image: "images/02_anpanman.png" },
+    { name: "クロミ",       radius: 35,  color: "#ffff7f", score: 8,    image: "images/03_kuromi.png" },
+    { name: "オーブ",       radius: 45,  color: "#7fff7f", score: 16,   image: "images/04_ultraman-orb.png" },
+    { name: "ひよこ",       radius: 55,  color: "#7fffff", score: 32,   image: "images/05_hiyoko.png" },
+    { name: "リブ",        radius: 65,  color: "#7f7fff", score: 64,   image: "images/06_live.PNG" },
+    { name: "とあ",        radius: 75,  color: "#ff7fff", score: 128,  image: "images/07_jijo.PNG" },
+    { name: "あやと",      radius: 85,  color: "#ff7fbf", score: 256,  image: "images/08_chonan.PNG" },
+    { name: "りあ",        radius: 100, color: "#e0e0e0", score: 512,  image: "images/09_chojo.PNG" },
+    { name: "おとうさん",   radius: 120, color: "#ff4500", score: 1024, image: "images/10_otosan.png" },
+    { name: "おかあさん",   radius: 140, color: "#ffd700", score: 2048, image: "images/11_okasan.png" }
 ];
 const loadedImages = {};
 FRUIT_TYPES.forEach(t => {
