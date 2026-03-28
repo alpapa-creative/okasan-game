@@ -126,6 +126,17 @@
             text-align: center;
             max-width: 90vw;
         }
+        .title-version {
+            position: absolute;
+            bottom: max(10px, env(safe-area-inset-bottom, 0px));
+            right: max(12px, env(safe-area-inset-right, 0px));
+            font-size: 10px;
+            font-weight: 700;
+            color: rgba(93, 64, 55, 0.42);
+            letter-spacing: 0.04em;
+            pointer-events: none;
+            user-select: none;
+        }
         .btn-group { display: flex; flex-direction: column; gap: 15px; width: 220px; }
         .btn {
             background: var(--suika-yellow);
@@ -244,6 +255,7 @@
             <button class="btn btn-sub" onclick="showScreen('howto')">あそびかた</button>
         </div>
         <p id="spawn-test-badge">テスト中</p>
+        <span id="title-version" class="title-version" aria-label="バージョン"></span>
     </div>
     <div id="screen-ranking" class="screen">
         <div class="modal-content">
@@ -298,6 +310,8 @@
     </div>
     <div id="toast"></div>
 <script>
+/** デプロイ確認用。更新したら数字を上げる */
+const GAME_VERSION = "1.2.0";
 const GAME_WIDTH = 400;
 const GAME_HEIGHT = 600;
 const WALL_THICKNESS = 60;
@@ -843,6 +857,8 @@ function updateScoreUI() {
     }
 }
 window.onload = function() {
+    const tv = document.getElementById("title-version");
+    if (tv) tv.textContent = "ver. " + GAME_VERSION;
     if (SPAWN_TOA_ONLY || SPAWN_MIN_TYPE_INDEX > 0) {
         const b = document.getElementById("spawn-test-badge");
         if (b) {
