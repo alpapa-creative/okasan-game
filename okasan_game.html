@@ -117,6 +117,15 @@
             pointer-events: none;
         }
         .logo-icon img { width: 100%; height: 100%; object-fit: contain; }
+        #spawn-test-badge {
+            display: none;
+            font-size: 13px;
+            font-weight: 900;
+            color: var(--suika-orange);
+            margin: 14px 0 0;
+            text-align: center;
+            max-width: 90vw;
+        }
         .btn-group { display: flex; flex-direction: column; gap: 15px; width: 220px; }
         .btn {
             background: var(--suika-yellow);
@@ -234,6 +243,7 @@
             <button class="btn btn-sub" onclick="showScreen('ranking')">ランキング</button>
             <button class="btn btn-sub" onclick="showScreen('howto')">あそびかた</button>
         </div>
+        <p id="spawn-test-badge">テスト中</p>
     </div>
     <div id="screen-ranking" class="screen">
         <div class="modal-content">
@@ -292,6 +302,10 @@ const GAME_WIDTH = 400;
 const GAME_HEIGHT = 600;
 const WALL_THICKNESS = 60;
 const DEADLINE_Y = 100;
+const DEADLINE_OVERGRACE_PX = 40;
+const DEADLINE_RADIUS_GRACE_MAX = 30;
+const DEADLINE_RADIUS_GRACE_FACTOR = 0.28;
+const DEADLINE_LOSE_STREAK = 15;
 // 画像を差し替えるときは images/ フォルダ内のファイルを入れ替えてください
 const FRUIT_TYPES = [
     { name: "ハート",       radius: 15,  color: "#ff7f7f", score: 2,    image: "images/01_heart.png" },
@@ -306,6 +320,10 @@ const FRUIT_TYPES = [
     { name: "おとうさん",   radius: 120, color: "#ff4500", score: 1024, image: "images/10_otosan.png" },
     { name: "おかあさん",   radius: 140, color: "#ffd700", score: 2048, image: "images/11_okasan.png" }
 ];
+const SPAWN_TOA_INDEX = Math.max(0, FRUIT_TYPES.findIndex(t => t.name === "とあ"));
+const spawnToaParam = new URLSearchParams(location.search).get("spawnToa");
+const SPAWN_TOA_ONLY = spawnToaParam === "1" || spawnToaParam === "true" || spawnToaParam === "only";
+const SPAWN_MIN_TYPE_INDEX = spawnToaParam === "high" ? SPAWN_TOA_INDEX : 0;
 const loadedImages = {};
 FRUIT_TYPES.forEach(t => {
     if (t.image) {
@@ -513,6 +531,22 @@ function showToast(m) {
     const t = document.getElementById('toast');
     if (t) { t.innerText = m; t.style.display = 'block'; setTimeout(() => t.style.display = 'none', 3000); }
 }
+function isBodyInWorld(body) {
+    return body && Composite.allBodies(engine.world).indexOf(body) !== -1;
+}
+function getFruitRadius(body) {
+    if (body.circleRadius != null && body.circleRadius > 0) return body.circleRadius;
+    if (body.label && body.label.startsWith('fruit_')) {
+        const idx = parseInt(body.label.split('_')[1], 10);
+        const t = FRUIT_TYPES[idx];
+        return t ? t.radius : 0;
+    }
+    return 0;
+}
+function getDeadlineLoseTopY(radius) {
+    const radiusGrace = Math.min(DEADLINE_RADIUS_GRACE_MAX, Math.floor(radius * DEADLINE_RADIUS_GRACE_FACTOR));
+    return DEADLINE_Y - DEADLINE_OVERGRACE_PX - radiusGrace;
+}
 function initEngine() {
     engine = Engine.create();
     if (engine.gravity) engine.gravity.y = 1.5;
@@ -531,44 +565,57 @@ function initEngine() {
     const rightWall = Bodies.rectangle(GAME_WIDTH + WALL_THICKNESS / 2, GAME_HEIGHT / 2, WALL_THICKNESS, GAME_HEIGHT * 2, wallProps);
     Composite.add(engine.world, [ground, leftWall, rightWall]);
     Events.on(engine, 'collisionStart', (event) => {
+        if (isGameOver) return;
         event.pairs.forEach(pair => {
             const a = pair.bodyA, b = pair.bodyB;
-            if (a.label && a.label === b.label && a.label.startsWith('fruit_')) {
-                const level = parseInt(a.label.split('_')[1]);
-                if (level < FRUIT_TYPES.length - 1) {
-                    const nextLvl = level + 1;
-                    const type = FRUIT_TYPES[nextLvl];
-                    const mid = { x: (a.position.x + b.position.x) / 2, y: (a.position.y + b.position.y) / 2 };
-                    Composite.remove(engine.world, [a, b]);
-                    const hasImg = type.image && loadedImages[type.name];
-                    const newFruit = Bodies.circle(mid.x, mid.y, type.radius, {
-                        label: 'fruit_' + nextLvl,
-                        render: hasImg
-                            ? { fillStyle: 'transparent', strokeStyle: 'transparent', lineWidth: 0 }
-                            : { fillStyle: type.color, strokeStyle: '#d35400', lineWidth: 3 },
-                        restitution: 0.2
-                    });
-                    Composite.add(engine.world, newFruit);
+            if (!a.label || !b.label || a.label !== b.label || !a.label.startsWith('fruit_')) return;
+            if (!isBodyInWorld(a) || !isBodyInWorld(b) || a === b) return;
+            const level = parseInt(a.label.split('_')[1], 10);
+            if (isNaN(level) || level >= FRUIT_TYPES.length - 1) return;
+            const nextLvl = level + 1;
+            const type = FRUIT_TYPES[nextLvl];
+            const mid = { x: (a.position.x + b.position.x) / 2, y: (a.position.y + b.position.y) / 2 };
+            Composite.remove(engine.world, [a, b]);
+            const hasImg = type.image && loadedImages[type.name];
+            const newFruit = Bodies.circle(mid.x, mid.y, type.radius, {
+                label: 'fruit_' + nextLvl,
+                render: hasImg
+                    ? { fillStyle: 'transparent', strokeStyle: 'transparent', lineWidth: 0 }
+                    : { fillStyle: type.color, strokeStyle: '#d35400', lineWidth: 3 },
+                restitution: 0.2
+            });
+            newFruit.mergeSafeTicks = 18;
+            Composite.add(engine.world, newFruit);
 
-                    playMergeSound(nextLvl);
-                    spawnParticles(mid.x, mid.y, type.color, 8 + nextLvl * 2);
-                    spawnScorePopup(mid.x, mid.y, type.score);
-                    score += type.score;
-                    updateScoreUI();
-                }
-            }
+            playMergeSound(nextLvl);
+            spawnParticles(mid.x, mid.y, type.color, 8 + nextLvl * 2);
+            spawnScorePopup(mid.x, mid.y, type.score);
+            score += type.score;
+            updateScoreUI();
         });
     });
     Events.on(engine, 'afterUpdate', () => {
         if (!isPlaying || isGameOver || isPaused) return;
         Composite.allBodies(engine.world).forEach(body => {
-            if (!body.isStatic && body.position.y < DEADLINE_Y && !canDrop && body !== currentFruit) {
-                if (body.speed < 0.2) {
+            if (body.isStatic || body === currentFruit || !body.label || !body.label.startsWith('fruit_')) return;
+            if (body.mergeSafeTicks > 0) {
+                body.mergeSafeTicks--;
+                return;
+            }
+            const r = getFruitRadius(body);
+            if (r <= 0) return;
+            const topY = body.position.y - r;
+            const loseTopY = getDeadlineLoseTopY(r);
+            if (topY < loseTopY && !canDrop && body.speed < 0.2) {
+                body._deadlineStreak = (body._deadlineStreak || 0) + 1;
+                if (body._deadlineStreak >= DEADLINE_LOSE_STREAK) {
                     isGameOver = true;
                     stopBgmLoop();
                     document.getElementById('final-score').innerText = score;
                     document.getElementById('game-over').style.display = 'block';
                 }
+            } else {
+                body._deadlineStreak = 0;
             }
         });
     });
@@ -732,8 +779,15 @@ window.resetToTitle = function() {
     document.getElementById('game-over').style.display = 'none';
     showScreen('title');
 };
+function pickNextFruitIndex() {
+    if (SPAWN_TOA_ONLY) return SPAWN_TOA_INDEX;
+    const min = SPAWN_MIN_TYPE_INDEX;
+    if (min <= 0) return Math.floor(Math.random() * 3);
+    const span = FRUIT_TYPES.length - min;
+    return min + Math.floor(Math.random() * span);
+}
 function prepareNext() {
-    nextTypeIndex = Math.floor(Math.random() * 3);
+    nextTypeIndex = pickNextFruitIndex();
     const t = FRUIT_TYPES[nextTypeIndex];
 
     let innerHTML = '';
@@ -788,7 +842,17 @@ function updateScoreUI() {
         localStorage.setItem('childArtGameHighScore', highScore);
     }
 }
-window.onload = initEngine;
+window.onload = function() {
+    if (SPAWN_TOA_ONLY || SPAWN_MIN_TYPE_INDEX > 0) {
+        const b = document.getElementById("spawn-test-badge");
+        if (b) {
+            b.style.display = "block";
+            if (SPAWN_TOA_ONLY) b.textContent = "テスト中: 「とあ」だけ落ちます（?spawnToa=1）";
+            else b.textContent = "テスト中: 「とあ」以上ランダム（?spawnToa=high）";
+        }
+    }
+    initEngine();
+};
 </script>
 </body>
 </html>
